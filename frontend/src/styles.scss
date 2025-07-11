@@ -1,0 +1,30 @@
+@use '@angular/material' as mat;
+
+$compact-theme: mat.define-theme((
+  density: (scale: -4)
+));
+
+:root {
+  @include mat.form-field-density($compact-theme)
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: 'Roboto', sans-serif;
+  background-color: #fafafa;
+}
+
+.mat-mdc-text-field-wrapper {
+  height: 40px !important;
+}
+
+

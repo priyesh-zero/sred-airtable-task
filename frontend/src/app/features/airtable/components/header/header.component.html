@@ -1,0 +1,64 @@
+<div class="header-section">
+  <mat-progress-bar *ngIf="sync.isSyncing" mode="indeterminate" color="primary"></mat-progress-bar>
+  <mat-accordion>
+    <mat-expansion-panel class="panel" [expanded]="expanded" [disabled]="!user.isConnected">
+      <mat-expansion-panel-header>
+        <div class="header-top">
+          <div class="meta">
+            <img src="assets/images/Airtable_Logo.png" alt="Airtable" class="logo" style="cursor: pointer" />
+            <ng-container *ngIf="user.isConnected">
+              <mat-icon color="primary" class="status-icon">check_circle</mat-icon>
+              <mat-icon class="spinner-icon" *ngIf="sync.isSyncing">sync</mat-icon>
+              <mat-icon *ngIf="!sync.isSyncing">history</mat-icon>
+            </ng-container>
+          </div>
+          <div class="user-info lg" *ngIf="user.isConnected">
+            <div>
+              <div class="info-line">
+                {{ user.email }}: {{ user.connectedAt | date: 'yyyy-MM-dd HH:mm a' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-expansion-panel-header>
+
+      <div class="auth-section">
+        <ng-container *ngIf="user.isLoading; else loadedSection">
+          <div class="loader">
+            <mat-spinner diameter="24"></mat-spinner>
+            <span class="loader-text">Checking your Airtable connection...</span>
+          </div>
+        </ng-container>
+
+        <ng-template #loadedSection>
+          <ng-container *ngIf="user.isConnected; else connectSection">
+            <div class="user-info-section">
+              <div class="user-info sx">
+                <div class="info-line">
+                  {{ user.email }}: {{ user.connectedAt | date: 'yyyy-MM-dd HH:mm a' }}
+                </div>
+              </div>
+              <div>
+                <div class="sync sx" *ngIf="sync.isSyncing">
+                  {{ sync.message || 'Syncing in progress...' }}
+                </div>
+              </div>
+              <button mat-raised-button color="primary" (click)="disconnect()" class="disconnect-btn">
+                Remove
+                <mat-icon class="remove-icon">logout</mat-icon>
+              </button>
+            </div>
+          </ng-container>
+
+          <ng-template #connectSection>
+            <div class="connect">
+              <button mat-raised-button color="primary" (click)="connect()">Connect</button>
+              <h3 class="connect-title">Connect Sredio to Airtable</h3>
+              <p class="error">{{ user.errorMessage }}</p>
+            </div>
+          </ng-template>
+        </ng-template>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>

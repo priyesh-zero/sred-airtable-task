@@ -1,0 +1,36 @@
+.dialog-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.dialog-content {
+  font-size: 14px;
+  padding-top: 6px;
+  padding-bottom: 12px;
+
+  p {
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.error {
+  color: #e53935;
+  font-size: 13px;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.action-buttons {
+  padding: 24px;
+  display: flex;
+  gap: 12px;
+
+  button {
+    min-width: 90px;
+  }
+}

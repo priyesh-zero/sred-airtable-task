@@ -1,0 +1,15 @@
+<div class="landing-wrapper" *ngIf="isLoggedIn">
+  <div class="title">
+    <img src="../../../../../assets/images/sredi-logo.png" alt="SERDIO" class="logo" />
+  </div>
+
+  <p>
+    You're securely connected to your Airtable workspace.
+  </p>
+
+  <div class="action-button">
+    <button mat-raised-button color="secondary" (click)="triggerScraping()">
+      Scrap Revision History
+    </button>
+  </div>
+</div>
