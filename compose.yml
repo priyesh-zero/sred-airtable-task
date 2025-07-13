@@ -18,30 +18,32 @@ services:
         "if [ ! -d node_modules ]; then yarn install; fi && yarn start",
       ] # Install dependencies if node_modules is missing
 
-  express:
-    container_name: express
-    image: node:lts-slim
-    ports:
-      - "3000:3000" # Adjust if needed for your dev server's port
-    volumes:
-      - ./backend:/app # Bind mount the current directory
-    environment:
-      - NODE_ENV=development
-    user: "1000:1000" # Run as non-root user
-    working_dir: /app # Set the working directory
-    entrypoint: [
-        "sh",
-        "-c",
-        "if [ ! -d node_modules ]; then yarn install; fi && yarn dev",
-      ] # Install dependencies if node_modules is missing
+  # express:
+  #   container_name: express
+  #   image: node:lts-bullseye
+  #   ports:
+  #     - "3000:3000" # Adjust if needed for your dev server's port
+  #   volumes:
+  #     - ./backend:/app # Bind mount the current directory
+  #   environment:
+  #     - NODE_ENV=development
+  #   user: "1000:1000" # Run as non-root user
+  #   working_dir: /app # Set the working directory
+  #   entrypoint: [
+  #       "sh",
+  #       "-c",
+  #       "if [ ! -d node_modules ]; then yarn install; fi && npx puppeteer browsers install chrome && yarn dev",
+  #     ] # Install dependencies if node_modules is missing
 
   mongodb:
     image: mongo
     container_name: mongodb
+    ports:
+      - "27017:27017" # Adjust if needed for your dev server's port
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=pass123
-      - MONGO_INITDB_DATABASE=integrations
+      - MONGO_INITDB_DATABASE=airtable
     volumes:
       - ./database/db:/data/db
     restart: unless-stopped

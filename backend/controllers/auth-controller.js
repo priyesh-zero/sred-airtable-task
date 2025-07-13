@@ -2,7 +2,10 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const AirtableOAuth = require("../models/AirtableAuth");
-const { generateCodeVerifier, generateCodeChallenge } = require("../helpers/pkce");
+const {
+  generateCodeVerifier,
+  generateCodeChallenge,
+} = require("../helpers/pkce");
 
 // Redirect user to Airtable's OAuth URL
 exports.startAirtableOAuth = (req, res) => {
@@ -24,7 +27,8 @@ exports.startAirtableOAuth = (req, res) => {
     maxAge: 10 * 60 * 1000,
   });
 
-  const redirectUrl = `https://airtable.com/oauth2/v1/authorize` +
+  const redirectUrl =
+    `https://airtable.com/oauth2/v1/authorize` +
     `?client_id=${process.env.AIRTABLE_CLIENT_ID}` +
     `&redirect_uri=${encodeURIComponent(process.env.AIRTABLE_CALLBACK_URL)}` +
     `&response_type=code` +
@@ -58,7 +62,7 @@ exports.handleAirtableOAuthCallback = async (req, res) => {
     formData.append("code_verifier", codeVerifier);
 
     const basicAuth = Buffer.from(
-      `${process.env.AIRTABLE_CLIENT_ID}:${process.env.AIRTABLE_CLIENT_SECRET}`
+      `${process.env.AIRTABLE_CLIENT_ID}:${process.env.AIRTABLE_CLIENT_SECRET}`,
     ).toString("base64");
 
     const tokenRes = await axios.post(
@@ -69,7 +73,7 @@ exports.handleAirtableOAuthCallback = async (req, res) => {
           "Content-Type": "application/x-www-form-urlencoded",
           Authorization: `Basic ${basicAuth}`,
         },
-      }
+      },
     );
 
     const accessToken = tokenRes.data.access_token;
@@ -97,7 +101,7 @@ exports.handleAirtableOAuthCallback = async (req, res) => {
     await AirtableOAuth.updateOne(
       { userId },
       { userId, email, accessToken, connectedAt },
-      { upsert: true }
+      { upsert: true },
     );
 
     const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -124,7 +128,6 @@ exports.handleAirtableOAuthCallback = async (req, res) => {
   }
 };
 
-
 // Check connection status
 exports.authStatus = async (req, res) => {
   try {
@@ -132,7 +135,9 @@ exports.authStatus = async (req, res) => {
     if (!token) return res.status(401).json({ isConnected: false });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const airtableAuth = await AirtableOAuth.findOne({ userId: decoded.userId });
+    const airtableAuth = await AirtableOAuth.findOne({
+      userId: decoded.userId,
+    });
 
     if (!airtableAuth) return res.status(404).json({ isConnected: false });
 
@@ -161,7 +166,10 @@ exports.logout = async (req, res) => {
       sameSite: "Lax",
     });
 
-    res.json({ success: true, message: "Disconnected from Airtable successfully." });
+    res.json({
+      success: true,
+      message: "Disconnected from Airtable successfully.",
+    });
   } catch (err) {
     console.error("Logout Error:", err.message);
     res.status(500).json({ success: false, message: "Logout failed" });

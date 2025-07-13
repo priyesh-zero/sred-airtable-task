@@ -1,10 +1,11 @@
-// const { getStats, cleanup, add: addJob } = require("../helpers/jobs/handlers");
+const { add: addJob } = require("../helpers/jobs/handlers");
 const { addClient, removeClient } = require("../helpers/stream");
-// const Job = require("../models/job");
+const Job = require("../models/job");
 
 exports.startUserSync = async (req, res) => {
   try {
-    // await addJob("sync-organizations", req.body.userId, {}, { priority: 1 });
+    await addJob("sync-projects", req.body.userId, {}, { priority: 1 });
+    await addJob("sync-users", req.body.userId, {}, { priority: 1 });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -22,14 +23,12 @@ exports.syncStatus = async (req, res) => {
   addClient(userId, res);
 
   const timeout = setTimeout(async () => {
-    // const existingJob = await Job.findOne({
-    //   userId,
-    //   status: {
-    //     $in: ["retry", "pending", "processing"],
-    //   },
-    // });
-
-    const existingJob = false;
+    const existingJob = await Job.findOne({
+      userId,
+      status: {
+        $in: ["retry", "pending", "processing"],
+      },
+    });
 
     if (!existingJob) {
       res.write(
