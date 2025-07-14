@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const authMiddleware = require("./middleware/auth");
 
 const airtableAuthRoutes = require("./routes/auth-routes");
+const airtableDataRoutes = require("./routes/data-routes");
 const scraperRoutes = require("./routes/scraper-routes");
 const jobRoutes = require("./routes/job-routes");
 const jobHandlers = require("./helpers/jobs/handlers");
@@ -39,6 +40,7 @@ mongoose
 
 // Routes
 app.use("/auth/airtable", airtableAuthRoutes);
+app.use("/data/collection", authMiddleware, airtableDataRoutes);
 app.use("/api/scraper", authMiddleware, scraperRoutes);
 app.use("/jobs", authMiddleware, jobRoutes);
 
