@@ -3,9 +3,7 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { AirtableService } from '../../services/airtable.service';
 import { MfaDialogComponent } from '../../components/mfa-dialog/mfa-dialog.component';
-import { PasswordDialogComponent } from '../../components/password-dialog/password-dialog.component';
 import { LoginDialogComponent } from '../../components/login-dialog/login-dialog.component';
-import { SyncService } from '../../services/sync.service';
 import { SyncStatusService } from '../../services/sync-status.service';
 
 @Component({
@@ -18,7 +16,7 @@ export class HomeComponent {
   isSyncing = true
   constructor(private dialog: MatDialog, private router: Router, private airtableSvc: AirtableService, private syncService: SyncStatusService) { }
 
-  ngOnInit(): void { 
+  ngOnInit(): void {
     this.syncService.syncStatus$.subscribe(response => {
       this.isSyncing = response?.isSyncing ?? true
 
@@ -63,7 +61,7 @@ export class HomeComponent {
 
   openLoginDialog(): void {
     const dialogRef = this.dialog.open(LoginDialogComponent, {
-      width: '350px',
+      width: '400px',
       disableClose: true
     });
 
@@ -74,15 +72,15 @@ export class HomeComponent {
       }
       if (creds.email && creds.password) {
         this.airtableSvc.startScraping(creds).subscribe((response) => {
-      if (response.status === 'MFA_REQUIRED') {
-        this.openMfaDialog();
-      }
-      if (response.status === 'READY_TO_SCRAPE') {
-        this.airtableSvc.performScraping().subscribe((response) => {
-          console.log('-----scaper response', response)
-        });
-      }
-    })
+          if (response.status === 'MFA_REQUIRED') {
+            this.openMfaDialog();
+          }
+          if (response.status === 'READY_TO_SCRAPE') {
+            this.airtableSvc.performScraping().subscribe((response) => {
+              console.log('-----scaper response', response)
+            });
+          }
+        })
       } else {
         console.log('Invalid Login');
       }
@@ -97,20 +95,6 @@ export class HomeComponent {
         });
       }
     })
-  }
-
-  openPasswordDialog(): void {
-    const dialogRef = this.dialog.open(PasswordDialogComponent, {
-      width: '450px',
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(password => {
-      if (password) {
-        // use password for verification
-        console.log('Password entered:', password);
-      }
-    });
   }
 
 }

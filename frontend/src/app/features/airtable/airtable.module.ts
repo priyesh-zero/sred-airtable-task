@@ -36,7 +36,6 @@ import { AirtableRoutingModule } from './airtable-routing.module';
 import { AirtableComponent } from './airtable.component';
 import { HeaderComponent } from './components/header/header.component';
 import { MfaDialogComponent } from './components/mfa-dialog/mfa-dialog.component';
-import { PasswordDialogComponent } from './components/password-dialog/password-dialog.component';
 import { HeaderToolbarComponent } from './components/header-toolbar/header-toolbar.component';
 import { ResultComponent } from './pages/result/result.component';
 import { PaginationComponent } from './components/pagination/pagination.component';
@@ -64,7 +63,6 @@ ModuleRegistry.registerModules([
     ResultComponent,
     PaginationComponent,
     MfaDialogComponent,
-    PasswordDialogComponent,
     PageNotFoundComponent,
     LoaderComponent,
     LoginDialogComponent

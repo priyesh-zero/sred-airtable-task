@@ -50,7 +50,7 @@ exports.startLogin = async (req, res) => {
       timeout: 60000,
     });
 
-    // ✨ Mimic human behavior
+    // Mimic human behavior
     await page.mouse.move(randomDelay(100, 400), randomDelay(100, 400));
     await page.mouse.click(randomDelay(200, 500), randomDelay(200, 500));
     await wait(randomDelay(500, 1000));
@@ -96,7 +96,7 @@ exports.startLogin = async (req, res) => {
       return res.json({ status: "READY_TO_SCRAPE" }); // no MFA
     }
   } catch (error) {
-    console.error("❌ Error during login:", error);
+    console.error("Error during login:", error);
     res.status(500).json({ error: error.message });
   }
 };

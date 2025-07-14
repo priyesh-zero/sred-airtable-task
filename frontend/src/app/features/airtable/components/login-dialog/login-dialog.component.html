@@ -2,13 +2,12 @@
 
 <mat-dialog-content class="dialog-content">
     <p>
-        To sync row revision data, please enter your airtable credentials for {{ email }}.
+        To sync row revision data, please enter your airtable credentials for <strong>{{ email }}</strong>.
     </p>
 
     <mat-form-field appearance="outline" class="full-width">
         <mat-label>Enter Password</mat-label>
-        <input matInput type="password" [(ngModel)]="password"
-            autocomplete="password" />
+        <input matInput type="password" [(ngModel)]="password" autocomplete="password" />
     </mat-form-field>
 
     <div class="error" *ngIf="passwordErrorMessage">{{ passwordErrorMessage }}</div>
