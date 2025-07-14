@@ -1,12 +1,9 @@
-import { Component, NgZone } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component } from '@angular/core';
 import { AirtableService } from './services/airtable.service';
 import {
-  IUserAuth,
-  IAirtableAuthResponse,
-  ISyncStatus
+  IUserAuth
 } from './models/airtable.model';
-import { SyncService } from './services/sync.service';
+import { SyncStatusService } from './services/sync-status.service';
 
 @Component({
   selector: 'app-airtable',
@@ -23,18 +20,9 @@ export class AirtableComponent {
     errorMessage: '',
   };
 
-  sync: ISyncStatus = {
-    isSyncing: false,
-    message: '',
-    stats: {},
-  };
-
-  expanded = true;
-
   constructor(
-    private ngZone: NgZone,
     private airtableSvc: AirtableService,
-    private syncSvc: SyncService,
+    private syncStatusSvc: SyncStatusService
   ) { }
 
   ngOnInit(): void {
@@ -45,10 +33,10 @@ export class AirtableComponent {
       if (user.isConnected) {
         if (isToBeSync === 'true') {
           this.cleanupURL();
-          this.listenToSyncProgress(true);
+          this.syncStatusSvc.initSyncListener(true);
         }
         else {
-          this.listenToSyncProgress()
+          this.syncStatusSvc.initSyncListener();
         }
       }
     });
@@ -68,33 +56,6 @@ export class AirtableComponent {
         this.user.errorMessage = err.message;
       },
     });
-  }
-
-  listenToSyncProgress(triggerSync: boolean = false): void {
-    this.expanded = false;
-
-    if (triggerSync) {
-      this.syncSvc.startUserSync().subscribe();
-    }
-
-    const eventSource = this.syncSvc.connectToSyncStatus();
-
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data) as ISyncStatus;
-      this.sync = data;
-      this.ngZone.run(() => {
-        if (!this.sync.isSyncing) {
-          eventSource.close();
-          this.sync.isSyncing = false;
-        }
-      });
-    };
-
-    eventSource.onerror = (err) => {
-      console.error('SSE error:', err);
-      eventSource.close();
-      // this.sync.isSyncing = false;
-    };
   }
 
   private resetAuthState(): void {

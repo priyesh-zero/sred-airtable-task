@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { AirtableService } from '../../services/airtable.service';
 import { MfaDialogComponent } from '../../components/mfa-dialog/mfa-dialog.component';
+import { PasswordDialogComponent } from '../../components/password-dialog/password-dialog.component';
 
 @Component({
   selector: 'airtable-home',
@@ -61,4 +62,19 @@ export class HomeComponent {
       }
     })
   }
+
+  openPasswordDialog(): void {
+    const dialogRef = this.dialog.open(PasswordDialogComponent, {
+      width: '450px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(password => {
+      if (password) {
+        // use password for verification
+        console.log('Password entered:', password);
+      }
+    });
+  }
+
 }

@@ -5,7 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   selector: 'app-mfa-dialog',
   standalone: false,
   templateUrl: './mfa-dialog.component.html',
-  styleUrls: ['./mfa-dialog.component.scss']
+  styleUrls: ['../../styles/dialog.scss']
 })
 export class MfaDialogComponent {
   mfaCode: string = '';

@@ -1,6 +1,5 @@
 <div class="airtable-wrapper" [ngClass]="{ 'mt-8': user.isConnected }">
-  <airtable-header [user]="user" [sync]="sync" [expanded]="expanded" (connectClicked)="connect()"
-    (disconnectClicked)="disconnect()">
+  <airtable-header [user]="user" (connectClicked)="connect()" (disconnectClicked)="disconnect()">
   </airtable-header>
   <div class="content">
     <airtable-loader></airtable-loader>

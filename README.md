@@ -1,15 +1,16 @@
-# 🧩 GitHub Integration App
+# 🧩 Airtable Integration App
 
-This full-stack project integrates GitHub data (repos, commits, issues, pulls, orgs, users) using **Angular** for the frontend and **Node.js/Express** with **MongoDB** for the backend.
+This full-stack project integrates with the **Airtable API**, allowing OAuth authentication and data retrieval for bases, tables, pages (tickets), and users.  
+It uses **Angular** for the frontend and **Node.js/Express** with **MongoDB** for the backend.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-TEST-TASK-MEAN/
+SRED-AIRTABLE-TASK/
 ├── backend/       → Node.js + Express + MongoDB
-├── frontend/      → Angular 19 UI (AG Grid, Material)
+├── frontend/      → Angular 19 UI (Material)
 ├── .gitignore
 └── README.md
 ```
@@ -28,11 +29,11 @@ Create a `.env` file inside `backend/`:
 
 ```env
 PORT=3000
-MONGO_URI=mongodb://localhost:27017/integrations # for local mongo connection
-GITHUB_CLIENT_ID=####################
-GITHUB_CLIENT_SECRET=****************************************
-GITHUB_CALLBACK_URL=http://localhost:4200/integration
-JWT_SECRET=********************************************
+MONGO_URI=mongodb://localhost:27017/airtable
+AIRTABLE_CLIENT_ID=############################################
+AIRTABLE_CLIENT_SECRET=****************************************
+AIRTABLE_CALLBACK_URL=http://localhost:3000/auth/airtable/callback
+JWT_SECRET=****************************************************
 CLIENT_URL=http://localhost:4200
 
 ```
@@ -55,7 +56,6 @@ npm run dev
 
 Backend will start on: `http://localhost:3000`
 
----
 
 ## 🌐 Frontend Setup (Angular)
 
@@ -80,43 +80,66 @@ App will run at: `http://localhost:4200`
 ng build
 ```
 
----
+## 🔗 Airtable API Integration
 
-## 🔗 GitHub API Integration
+OAuth2 flow is implemented to authenticate with Airtable and access the following endpoints:
 
-This project fetches:
+- **Bases**: `/meta/bases`
+- **Tables**: `/meta/bases/:baseId/tables`
+- **Tickets (Pages)**: `/:baseId/:tableId`
+- **Users**: `/Users`
 
-- Repositories
-- Commits
-- Issues
-- Pull Requests
-- Organization members
+Key features:
 
-OAuth2 flow + token storage is used for authentication.
+- Secure Airtable authentication
+- Airtable API pagination support
+- Tickets/pages are stored in a MongoDB collection
+
+
+## 🔍 Custom Revision History Scraper
+
+A custom scraper is implemented to fetch **Revision History** (Changelog) from Airtable:
+
+- Fetches HTML response from `/readRowActivitiesAndComments`
+- Parses and extracts:
+  - **Assignee changes**
+  - **Status updates**
+- Automatically retrieves cookies needed for this endpoint
+- Validates cookies and refreshes if expired
+- Supports MFA code input from the frontend
+- Stores structured changelog data in MongoDB
+- Tested with 200+ Airtable pages for reliability
 
 ---
 
 ## 🛡️ Tech Stack
 
-- **Frontend**: Angular 19, Angular Material, AG Grid
+- **Frontend**: Angular 19, Angular Material
 - **Backend**: Node.js, Express, Axios, Mongoose
 - **Database**: MongoDB
-- **Auth**: GitHub OAuth2
+- **Auth**: Airtable OAuth2
 
 ---
 
 ## 👨‍💻 Developer Notes
 
-- Debounced search with AG Grid filtering
-- Manual pagination logic
-- Supports multiple GitHub entities dynamically
+### Custom Revision History Scraper
+
+A custom scraper is implemented to fetch **Revision History** (Changelog) from Airtable:
+
+- Fetches HTML response from `/readRowActivitiesAndComments`
+- Parses and extracts:
+  - **Assignee changes**
+  - **Status updates**
+- Automatically retrieves cookies needed for this endpoint
+- Validates cookies and refreshes if expired
+- Supports MFA code input from the frontend
+- Stores structured changelog data in MongoDB
+- Tested with 200+ Airtable pages for reliability
 
 ---
 
-## Task One
+## Task
 
-[Task One Details](./assets/task-one.pdf)
+[Task Details](./assets/task-three.pdf)
 
-## Task Two
-
-[Task Two Details](./assets/task-two.pdf)

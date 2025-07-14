@@ -29,7 +29,7 @@ const startLogin = async (userId) => {
   const password = process.env.AIRTABLE_PASSWORD;
 
   const browserInstance = await puppeteer.launch({
-    headless: false,
+    headless: true,
     defaultViewport: null,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
