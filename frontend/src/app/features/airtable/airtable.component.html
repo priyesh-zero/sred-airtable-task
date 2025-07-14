@@ -1,3 +1,6 @@
+<ng-container *ngIf="user.isConnected">
+  <header-toolbar></header-toolbar>
+</ng-container>
 <div class="airtable-wrapper" [ngClass]="{ 'mt-8': user.isConnected }">
   <airtable-header [user]="user" (connectClicked)="connect()" (disconnectClicked)="disconnect()">
   </airtable-header>

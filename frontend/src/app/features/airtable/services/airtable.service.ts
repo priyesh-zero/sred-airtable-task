@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import {
@@ -71,6 +71,29 @@ export class AirtableService {
   removeUser(): void {
     removeFromLS(LSKeys.USER);
     this.router.navigate(['/airtable']);
+  }
+
+  // -----------------------------
+  // Data Fetching Methods
+  // -----------------------------
+
+  getCollectionData(
+    collection: string,
+    page = 0,
+    limit = 20,
+    searchText = ''
+  ) {
+    const params = new HttpParams()
+      .set('collection', collection)
+      .set('page', page.toString())
+      .set('limit', limit.toString())
+      .set('searchText', searchText);
+
+    return this.http.get<{
+      fields: string[];
+      data: any[];
+      total: number;
+    }>(`${this.API_BASE}/data/collection`, { params, withCredentials: true });
   }
 
   // -----------------------------
