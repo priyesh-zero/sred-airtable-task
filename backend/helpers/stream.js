@@ -9,11 +9,19 @@ const clientMap = new Map();
  * @param {boolean} [isSyncing=true] syncing status
  * @returns {void} no returns
  */
-const respond = (response, stats, message, isSyncing = true) => {
-  response.write(`data: ${JSON.stringify({ isSyncing, stats, message })}\n\n`);
-  if (!isSyncing) {
-    response.end();
-  }
+const respond = (
+  response,
+  stats,
+  message,
+  isSyncing = true,
+  type = "syncing"
+) => {
+  response.write(
+    `data: ${JSON.stringify({ isSyncing, stats, message, type })}\n\n`
+  );
+  // if (!isSyncing) {
+  //   response.end();
+  // }
 };
 
 /**
@@ -42,16 +50,28 @@ exports.removeClient = (userId) => {
  * @param {boolean} [=false] completed is syncing complete
  * @returns {void} no returns
  */
-exports.sentToClient = (userId, update, completed = false) => {
+exports.sentToClient = (
+  userId,
+  update,
+  completed = false,
+  type = "syncing",
+  msg = ""
+) => {
   if (!clientMap.has(userId.toString())) {
     return;
   }
   const { response, stats } = clientMap.get(userId.toString());
   let message = "";
-  for (key in update) {
-    stats[key] = stats[key] ? stats[key] + update[key] : update[key];
-    message = message + ` ${stats[key]} ${key}`;
+  if (type === "syncing") {
+    for (key in update) {
+      stats[key] = stats[key] ? stats[key] + update[key] : update[key];
+      message = message + ` ${stats[key]} ${key}`;
+      message = `Syncing! ${message} synced already`;
+    }
+  } else {
+    message = msg;
   }
+
   clientMap.set(userId.toString(), { response, stats });
-  respond(response, stats, `Syncing! ${message} synced already`, !completed);
+  respond(response, stats, message, !completed, type);
 };

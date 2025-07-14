@@ -4,6 +4,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { AirtableService } from '../../services/airtable.service';
 import { MfaDialogComponent } from '../../components/mfa-dialog/mfa-dialog.component';
 import { PasswordDialogComponent } from '../../components/password-dialog/password-dialog.component';
+import { LoginDialogComponent } from '../../components/login-dialog/login-dialog.component';
+import { SyncService } from '../../services/sync.service';
+import { SyncStatusService } from '../../services/sync-status.service';
 
 @Component({
   selector: 'airtable-home',
@@ -12,9 +15,24 @@ import { PasswordDialogComponent } from '../../components/password-dialog/passwo
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
-  constructor(private dialog: MatDialog, private router: Router, private airtableSvc: AirtableService) { }
+  isSyncing = true
+  constructor(private dialog: MatDialog, private router: Router, private airtableSvc: AirtableService, private syncService: SyncStatusService) { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void { 
+    this.syncService.syncStatus$.subscribe(response => {
+      this.isSyncing = response?.isSyncing ?? true
+
+      if (response?.message === "LOGIN_REQUIRED") {
+        this.openLoginDialog()
+      }
+
+      if (response?.message.includes("Something went wrong")) {
+        alert(response.message)
+      }
+
+
+    })
+  }
 
   get isLoggedIn() {
     return this.airtableSvc.isLoggedIn();
@@ -23,17 +41,7 @@ export class HomeComponent {
   triggerScraping(): void {
     this.airtableSvc.performScraping().subscribe(response => {
       if (response.status === "LOGIN_REQUIRED") {
-        
-        this.airtableSvc.startScraping().subscribe((response) => {
-      if (response.status === 'MFA_REQUIRED') {
-        this.openMfaDialog();
-      }
-      if (response.status === 'READY_TO_SCRAPE') {
-        this.airtableSvc.performScraping().subscribe((response) => {
-          console.log('-----scaper response', response)
-        });
-      }
-    })
+        this.openLoginDialog()
       }
     })
   }
@@ -49,6 +57,34 @@ export class HomeComponent {
         this.sendToBackend(code);
       } else {
         console.log('MFA entry cancelled');
+      }
+    });
+  }
+
+  openLoginDialog(): void {
+    const dialogRef = this.dialog.open(LoginDialogComponent, {
+      width: '350px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(creds => {
+      if (!creds) {
+        console.log("Login was cancelled!")
+        return
+      }
+      if (creds.email && creds.password) {
+        this.airtableSvc.startScraping(creds).subscribe((response) => {
+      if (response.status === 'MFA_REQUIRED') {
+        this.openMfaDialog();
+      }
+      if (response.status === 'READY_TO_SCRAPE') {
+        this.airtableSvc.performScraping().subscribe((response) => {
+          console.log('-----scaper response', response)
+        });
+      }
+    })
+      } else {
+        console.log('Invalid Login');
       }
     });
   }

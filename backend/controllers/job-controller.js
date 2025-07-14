@@ -24,6 +24,9 @@ exports.syncStatus = async (req, res) => {
 
   const timeout = setTimeout(async () => {
     const existingJob = await Job.findOne({
+      type: {
+        $ne: "sync-revisions",
+      },
       userId,
       status: {
         $in: ["retry", "pending", "processing"],
@@ -32,9 +35,13 @@ exports.syncStatus = async (req, res) => {
 
     if (!existingJob) {
       res.write(
-        `data: ${JSON.stringify({ isSyncing: false, stats: {}, message: "Sync complete!" })}\n\n`,
+        `data: ${JSON.stringify({
+          isSyncing: false,
+          stats: {},
+          message: "Sync complete!",
+        })}\n\n`
       );
-      res.end();
+      // res.end();
     }
     !!timeout && clearTimeout(timeout);
   }, 2000);

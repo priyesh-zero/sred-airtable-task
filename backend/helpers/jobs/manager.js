@@ -92,6 +92,9 @@ const processJob = async (job) => {
     });
 
     const existingJob = await Job.findOne({
+      type: {
+        $ne: "sync-revisions",
+      },
       userId: job.userId,
       status: {
         $in: ["retry", "pending", "processing"],

@@ -13,12 +13,7 @@ const ModelMap = {
 };
 
 exports.getCollectionData = async (req, res) => {
-  const {
-    collection,
-    page = 1,
-    limit = 20,
-    searchText = ""
-  } = req.query;
+  const { collection, page = 1, limit = 20, searchText = "" } = req.query;
 
   try {
     const Model = ModelMap[collection];
@@ -27,11 +22,14 @@ exports.getCollectionData = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const limitVal = parseInt(limit);
 
-    const excludedFields = ["_id", "id", "_userIds", "__v"];
+    const excludedFields = ["_id", "_userIds", "__v"];
 
     // Get only string fields from the schema for $regex filtering
     const stringFields = Object.entries(Model.schema.paths)
-      .filter(([key, type]) => type.instance === 'String' && !excludedFields.includes(key))
+      .filter(
+        ([key, type]) =>
+          type.instance === "String" && !excludedFields.includes(key)
+      )
       .map(([key]) => key);
 
     const query = {};
@@ -41,8 +39,8 @@ exports.getCollectionData = async (req, res) => {
         return res.json({ fields: [], data: [], total: 0 });
       }
 
-      query.$or = stringFields.map(field => ({
-        [field]: { $regex: searchText, $options: 'i' }
+      query.$or = stringFields.map((field) => ({
+        [field]: { $regex: searchText, $options: "i" },
       }));
     }
 
@@ -51,8 +49,8 @@ exports.getCollectionData = async (req, res) => {
     const total = await Model.countDocuments(query);
 
     // Remove unwanted fields
-    const data = docs.map(doc => {
-      excludedFields.forEach(field => delete doc[field]);
+    const data = docs.map((doc) => {
+      excludedFields.forEach((field) => delete doc[field]);
       return doc;
     });
 
@@ -61,7 +59,7 @@ exports.getCollectionData = async (req, res) => {
 
     res.json({ fields, data, total });
   } catch (err) {
-    console.error('getCollectionData Error:', err);
+    console.error("getCollectionData Error:", err);
     res.status(500).json({ error: err.message });
   }
 };

@@ -40,6 +40,7 @@ import { PasswordDialogComponent } from './components/password-dialog/password-d
 import { HeaderToolbarComponent } from './components/header-toolbar/header-toolbar.component';
 import { ResultComponent } from './pages/result/result.component';
 import { PaginationComponent } from './components/pagination/pagination.component';
+import { LoginDialogComponent } from './components/login-dialog/login-dialog.component';
 
 // Register AG Grid modules
 ModuleRegistry.registerModules([
@@ -53,6 +54,7 @@ ModuleRegistry.registerModules([
   PaginationModule,
 ]);
 
+
 @NgModule({
   declarations: [
     AirtableComponent,
@@ -64,7 +66,8 @@ ModuleRegistry.registerModules([
     MfaDialogComponent,
     PasswordDialogComponent,
     PageNotFoundComponent,
-    LoaderComponent
+    LoaderComponent,
+    LoginDialogComponent
   ],
   imports: [
     CommonModule,

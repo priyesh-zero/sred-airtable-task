@@ -68,6 +68,14 @@ export class AirtableService {
     return authData.isConnected === true;
   }
 
+  getUserInfo(): IUserAuth | null {
+    const user = getFromLS<IUserAuth>(LSKeys.USER)
+    if (!!user) {
+      return user
+    }
+    return null
+  }
+
   removeUser(): void {
     removeFromLS(LSKeys.USER);
     this.router.navigate(['/airtable']);
@@ -100,8 +108,8 @@ export class AirtableService {
   // Scraping / MFA Methods
   // -----------------------------
 
-  startScraping(): Observable<any> {
-    return this.http.post(`${this.API_BASE}/api/scraper/start-login`, {}, {
+  startScraping(creds: { email: string, password: string}): Observable<any> {
+    return this.http.post(`${this.API_BASE}/api/scraper/start-login`, creds, {
       withCredentials: true
     });
   }

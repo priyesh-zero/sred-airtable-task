@@ -10,8 +10,10 @@ const persistantMap = require("../helpers/persistant-map");
 const Job = require("../models/job");
 const RevisionSchema = require("../models/airtable/revision");
 const { sleep } = require("../helpers/utils");
+const { sentToClient } = require("../helpers/stream");
 
 let browserInstance = null;
+let browserContext = null;
 let page = null;
 
 const email = process.env.AIRTABLE_EMAIL;
@@ -22,18 +24,25 @@ const randomDelay = (min, max) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
 exports.startLogin = async (req, res) => {
-  const browserInstance = await firefox.launch({
+  browserInstance = await firefox.launch({
     headless: false,
     args: ["--no-sandbox"],
   });
 
-  const context = await browserInstance.newContext({
+  const email = req.body.email || "";
+  const password = req.body.password || "";
+
+  if (!email || !password) {
+    return res.status(400).json({ status: "Invalid credentials" });
+  }
+
+  browserContext = await browserInstance.newContext({
     userAgent:
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
     viewport: { width: 1366, height: 768 },
   });
 
-  page = await context.newPage();
+  page = await browserContext.newPage();
 
   try {
     await page.goto("https://airtable.com/login", {
@@ -77,18 +86,18 @@ exports.startLogin = async (req, res) => {
       await page.waitForSelector('input[name="code"]', { timeout: 10000 });
       return res.json({ status: "MFA_REQUIRED" });
     } catch {
-      const cookies = await context.cookies();
+      const cookies = await browserContext.cookies();
       persistantMap.set(req.body.userId.toString(), cookies);
+      await browserContext.close();
       await browserInstance?.close();
       browserInstance = null;
+      browserContext = null;
       pageInstance = null;
       return res.json({ status: "READY_TO_SCRAPE" }); // no MFA
     }
   } catch (error) {
     console.error("❌ Error during login:", error);
     res.status(500).json({ error: error.message });
-  } finally {
-    await browser.close();
   }
 };
 
@@ -116,10 +125,18 @@ exports.submitMfaCode = async (req, res) => {
         document.title.includes("Airtable"),
       { timeout: 60000 }
     );
+    const cookies = await browserContext.cookies();
+
+    persistantMap.set(req.body.userId.toString(), cookies);
+    await browserInstance?.close();
+    browserInstance = null;
+    browserContext = null;
+    pageInstance = null;
     return res.json({ status: "MFA_VERIFIED" });
   } catch (err) {
     console.error("[MFA Error]", err.message);
     await browserInstance?.close();
+    browserContext = null;
     browserInstance = null;
     pageInstance = null;
     return res.status(500).json({ error: "MFA failed", reason: err.message });
@@ -154,6 +171,7 @@ const scrapeRevisions = async (userId) => {
     });
 
     for (const job of scrapingJobs) {
+      sentToClient(userId, {}, false, "scraping", "Syncing Revisions!");
       const cookies = await persistantMap.get(userId);
 
       const cookieHeader = cookies
@@ -186,6 +204,16 @@ const scrapeRevisions = async (userId) => {
         );
       }
 
+      if (parsedData.length > 0) {
+        sentToClient(
+          userId,
+          {},
+          false,
+          "scraping",
+          `Synced ${parsedData.length} Revisions!`
+        );
+      }
+
       await Job.findByIdAndUpdate(job._id, {
         status: "completed",
         completedAt: new Date(),
@@ -193,7 +221,19 @@ const scrapeRevisions = async (userId) => {
 
       await sleep(1000);
     }
+    sentToClient(userId, {}, true, "scraping", `Revision Sync complete!`);
   } catch (e) {
     console.log("Running in error", e.message);
+    if (e.message?.includes("403") || e.message?.includes("401")) {
+      sentToClient(userId, {}, true, "scraping", "LOGIN_REQUIRED");
+    } else {
+      sentToClient(
+        userId,
+        {},
+        true,
+        "scraping",
+        `Something went wrong! [${e.message}]`
+      );
+    }
   }
 };

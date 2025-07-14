@@ -18,7 +18,7 @@ async function fetchRevisionHistory(
 
   const params = {
     stringifiedObjectParams: JSON.stringify({
-      limit: 2,
+      limit: 100,
       offsetV2: offset,
       shouldReturnDeserializedActivityItems: true,
       shouldIncludeRowActivityOrCommentUserObjById: true,

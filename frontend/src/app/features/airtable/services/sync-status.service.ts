@@ -27,7 +27,7 @@ export class SyncStatusService implements OnDestroy {
         this.syncStatusSubject.next(data);
 
         if (!data.isSyncing) {
-          this.cleanup();
+          // this.cleanup();
         }
       });
     };
