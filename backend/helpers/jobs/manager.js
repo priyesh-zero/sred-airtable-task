@@ -31,6 +31,9 @@ exports.processJobs = async () => {
 // Process retry jobs
 const processRetryJobs = async () => {
   const retryJobs = await Job.find({
+    type: {
+      $ne: "sync-revisions",
+    },
     status: "retry",
     nextRetryAt: { $lte: new Date() },
   }).sort({ priority: -1, nextRetryAt: 1 });
@@ -51,6 +54,9 @@ const processRetryJobs = async () => {
 const getNextJob = async () => {
   const job = await Job.findOneAndUpdate(
     {
+      type: {
+        $ne: "sync-revisions",
+      },
       status: "pending",
       scheduledAt: { $lte: new Date() },
     },
@@ -61,7 +67,7 @@ const getNextJob = async () => {
     {
       sort: { priority: -1, scheduledAt: 1 },
       new: true,
-    },
+    }
   );
 
   return job;
@@ -97,7 +103,7 @@ const processJob = async (job) => {
       {
         [job.type.replace("sync-", "")]: result.synced,
       },
-      !existingJob,
+      !existingJob
     );
 
     console.log(`Job ${job._id} completed successfully`);
@@ -110,7 +116,6 @@ const processJob = async (job) => {
       console.error(`Job ${job._id} failed:`, error.message);
       await handleJobError(job, error);
     }
-    process.exit(1);
   } finally {
     jobState.workers.delete(workerId);
   }

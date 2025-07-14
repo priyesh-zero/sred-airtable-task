@@ -51,3 +51,4 @@ logs/
 *.tsbuildinfo
 
 database/
+backend/helpers/cookies.json

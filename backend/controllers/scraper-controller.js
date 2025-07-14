@@ -1,123 +1,199 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-require('dotenv').config();
+require("dotenv").config();
 const {
   fetchRevisionHistory,
-  parseActivityHtmlList
-} = require('../helpers/scraper');
+  parseActivityHtmlList,
+} = require("../helpers/scraper");
 
-puppeteer.use(StealthPlugin());
+const { firefox } = require("playwright");
+const fs = require("fs");
+const persistantMap = require("../helpers/persistant-map");
+const Job = require("../models/job");
+const RevisionSchema = require("../models/airtable/revision");
+const { sleep } = require("../helpers/utils");
+
 let browserInstance = null;
-let pageInstance = null;
+let page = null;
+
+const email = process.env.AIRTABLE_EMAIL;
+const password = process.env.AIRTABLE_PASSWORD;
+
+const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+const randomDelay = (min, max) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
 exports.startLogin = async (req, res) => {
+  const browserInstance = await firefox.launch({
+    headless: false,
+    args: ["--no-sandbox"],
+  });
+
+  const context = await browserInstance.newContext({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
+    viewport: { width: 1366, height: 768 },
+  });
+
+  page = await context.newPage();
+
   try {
-    const email = process.env.AIRTABLE_EMAIL;
-    const password = process.env.AIRTABLE_PASSWORD;
-
-    browserInstance = await puppeteer.launch({
-      headless: true,
-      defaultViewport: null,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled'
-      ]
+    await page.goto("https://airtable.com/login", {
+      waitUntil: "load",
+      timeout: 60000,
     });
 
-    pageInstance = await browserInstance.newPage();
+    // ✨ Mimic human behavior
+    await page.mouse.move(randomDelay(100, 400), randomDelay(100, 400));
+    await page.mouse.click(randomDelay(200, 500), randomDelay(200, 500));
+    await wait(randomDelay(500, 1000));
 
-    await pageInstance.goto('https://airtable.com/login', { waitUntil: 'networkidle0' });
+    // Fill email
+    await page.waitForSelector('input[name="email"]');
+    await page.fill('input[name="email"]', email, { timeout: 5000 });
+    await wait(randomDelay(500, 1000));
+    await page.keyboard.press("Tab");
 
-    await pageInstance.type('#emailLogin', email);
-    await pageInstance.click('button[type="submit"]');
-
-    await pageInstance.waitForSelector('#passwordLogin', { timeout: 15000 });
-    await pageInstance.type('#passwordLogin', password);
-
-    await pageInstance.evaluate(() => {
-      const passwordField = document.querySelector('#passwordLogin');
-      const inputEvent = new Event('input', { bubbles: true });
-      passwordField?.dispatchEvent(inputEvent);
+    // Click "Continue"
+    await page.waitForSelector('button[type="submit"]:not([disabled])', {
+      timeout: 10000,
     });
+    await page.click('button[type="submit"]');
 
-    await pageInstance.waitForFunction(() => {
-      const btn = document.querySelector('button[type="submit"]');
-      return btn && !btn.disabled;
-    }, { timeout: 10000 });
+    // Wait and type password
+    await page.waitForSelector('input[name="password"]', { timeout: 10000 });
+    await page.type('input[name="password"]', password, {
+      delay: randomDelay(50, 150),
+    });
+    await wait(randomDelay(500, 1000));
+    await page.keyboard.press("Tab");
 
-    await pageInstance.click('button[type="submit"]');
+    // Final submit
+    await page.waitForSelector('button[type="submit"]:not([disabled])', {
+      timeout: 10000,
+    });
+    await wait(randomDelay(1000, 2000));
+    await page.click('button[type="submit"]');
 
     try {
-      await pageInstance.waitForSelector('input[name="code"]', { timeout: 10000 });
-      return res.json({ status: 'MFA_REQUIRED' });
+      await page.waitForSelector('input[name="code"]', { timeout: 10000 });
+      return res.json({ status: "MFA_REQUIRED" });
     } catch {
-      return res.json({ status: 'READY_TO_SCRAPE' }); // no MFA
+      const cookies = await context.cookies();
+      persistantMap.set(req.body.userId.toString(), cookies);
+      await browserInstance?.close();
+      browserInstance = null;
+      pageInstance = null;
+      return res.json({ status: "READY_TO_SCRAPE" }); // no MFA
     }
-  } catch (err) {
-    console.error('[Login Error]', err.message);
-    return res.status(500).json({ error: 'Login start failed', reason: err.message });
+  } catch (error) {
+    console.error("❌ Error during login:", error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    await browser.close();
   }
 };
-
 
 exports.submitMfaCode = async (req, res) => {
   const { mfaCode } = req.body;
 
-  if (!pageInstance) {
-    return res.status(400).json({ error: 'No session found. Start login again.' });
+  if (!page) {
+    return res
+      .status(400)
+      .json({ error: "No session found. Start login again." });
   }
 
   try {
-    await pageInstance.type('input[name="code"]', mfaCode);
-    await pageInstance.evaluate(() => {
-      const submitButton = [...document.querySelectorAll('div.pointer')]
-        .find(el => el.textContent?.trim().toLowerCase() === 'submit');
+    await page.type('input[name="code"]', mfaCode);
+    await page.evaluate(() => {
+      const submitButton = [...document.querySelectorAll("div.pointer")].find(
+        (el) => el.textContent?.trim().toLowerCase() === "submit"
+      );
       submitButton?.click();
     });
 
-    await pageInstance.waitForFunction(() =>
-      window.location.href.includes('/app') || document.title.includes('Airtable'),
+    await page.waitForFunction(
+      () =>
+        window.location.href.includes("/app") ||
+        document.title.includes("Airtable"),
       { timeout: 60000 }
     );
-    return res.json({ status: 'MFA_VERIFIED' });
+    return res.json({ status: "MFA_VERIFIED" });
   } catch (err) {
-    console.error('[MFA Error]', err.message);
+    console.error("[MFA Error]", err.message);
     await browserInstance?.close();
     browserInstance = null;
     pageInstance = null;
-    return res.status(500).json({ error: 'MFA failed', reason: err.message });
+    return res.status(500).json({ error: "MFA failed", reason: err.message });
   }
 };
 
-exports.scrapeHardcodedTicket = async (req, res) => {
+exports.scrapeTickets = async (req, res) => {
   try {
-    if (!pageInstance) {
-      return res.status(400).json({ error: 'Session expired. Please login again.' });
+    if (!persistantMap.has(req.body.userId.toString())) {
+      return res.json({ status: "LOGIN_REQUIRED" });
     }
 
-    const ticketId = 'recmoivzdGw8pyCt5'; // Hardcoded
-    const secretSocketId = 'socziSGrrxrTDf2Xb'; // Hardcoded (you should later capture it dynamically)
+    scrapeRevisions(req.body.userId.toString());
 
-    const cookies = await pageInstance.cookies();
-    const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-
-    const result = await fetchRevisionHistory(ticketId, cookieHeader, secretSocketId);
-    const parsedData = parseActivityHtmlList(result.data, ticketId);
-
-    console.log('-------parsed data', parsedData)
-    return res.json({
-      status: 'SCRAPE_SUCCESS',
-      ticketId,
-      data: parsedData
-    });
-
+    res.json({ status: "Scraping..." });
   } catch (err) {
-    console.error('[Scrape Error]', err.message);
-    return res.status(500).json({ error: 'Scraping failed', reason: err.message });
+    console.error("[Scrape Error]", err.message);
+    return res
+      .status(500)
+      .json({ error: "Scraping failed", reason: err.message });
   }
 };
 
+const scrapeRevisions = async (userId) => {
+  try {
+    const scrapingJobs = await Job.find({
+      type: "sync-revisions",
+      userId,
+      status: {
+        $nin: ["retry", "failed", "completed"],
+      },
+    });
 
+    for (const job of scrapingJobs) {
+      const cookies = await persistantMap.get(userId);
 
+      const cookieHeader = cookies
+        .map((c) => `${c.name}=${c.value}`)
+        .join("; ");
 
+      const secretSocketId = "socziSGrrxrTDf2Xb"; // Hardcoded (you should later capture it dynamically)
+
+      const result = await fetchRevisionHistory(
+        job.data.baseId,
+        job.data.ticketId,
+        cookieHeader,
+        secretSocketId
+      );
+
+      const parsedData = result.flatMap((data) =>
+        parseActivityHtmlList(data, job.data.ticketId)
+      );
+
+      for (const data of parsedData) {
+        await RevisionSchema.findOneAndUpdate(
+          { uuid: data.uuid },
+          {
+            $addToSet: { _userIds: job.userId },
+            $setOnInsert: {
+              ...data,
+            },
+          },
+          { upsert: true, new: true }
+        );
+      }
+
+      await Job.findByIdAndUpdate(job._id, {
+        status: "completed",
+        completedAt: new Date(),
+      });
+
+      await sleep(1000);
+    }
+  } catch (e) {
+    console.log("Running in error", e.message);
+  }
+};

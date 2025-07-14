@@ -62,6 +62,7 @@ exports.syncProjects = async (job) => {
 };
 
 exports.syncUsers = async (job) => {
+  return { synced: 0, users: [] }
   const user = await getUser(job.userId);
 
   const { Resources, startIndex, totalResults } = await airtableRequest(

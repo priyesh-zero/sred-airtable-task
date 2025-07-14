@@ -1,22 +1,22 @@
 version: "3.8"
 
 services:
-  angular:
-    container_name: angular
-    image: node:lts-slim
-    ports:
-      - "4200:4200" # Adjust if needed for your dev server's port
-    volumes:
-      - ./frontend:/app # Bind mount the current directory
-    environment:
-      - NODE_ENV=development
-    user: "1000:1000" # Run as non-root user
-    working_dir: /app # Set the working directory
-    entrypoint: [
-        "sh",
-        "-c",
-        "if [ ! -d node_modules ]; then yarn install; fi && yarn start",
-      ] # Install dependencies if node_modules is missing
+  # angular:
+  #   container_name: angular
+  #   image: node:lts-slim
+  #   ports:
+  #     - "4200:4200" # Adjust if needed for your dev server's port
+  #   volumes:
+  #     - ./frontend:/app # Bind mount the current directory
+  #   environment:
+  #     - NODE_ENV=development
+  #   user: "1000:1000" # Run as non-root user
+  #   working_dir: /app # Set the working directory
+  #   entrypoint: [
+  #       "sh",
+  #       "-c",
+  #       "if [ ! -d node_modules ]; then yarn install; fi && yarn start",
+  #   ] # Install dependencies if node_modules is missing
 
   # express:
   #   container_name: express

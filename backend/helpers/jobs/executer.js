@@ -1,4 +1,3 @@
-const Airtable = require("airtable");
 const jobProcessor = require("./processor");
 
 // Execute job based on type
@@ -12,8 +11,6 @@ exports.executeJob = async (job) => {
       return await jobProcessor.syncTickets(job);
     case "sync-users":
       return await jobProcessor.syncUsers(job);
-    case "sync-revisions":
-      return await jobProcessor.syncRevisions(job);
     default:
       throw new Error(`Unknown job type: ${job.type}`);
   }

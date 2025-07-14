@@ -1,5 +1,6 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { sleep } = require("./utils");
 
 function generateRequestId() {
   return "req" + Math.random().toString(36).substring(2, 12);
@@ -10,13 +11,15 @@ async function fetchRevisionHistory(
   ticketId,
   cookieHeader,
   secretSocketId,
+  offset = null,
+  data = []
 ) {
   const url = `https://airtable.com/v0.3/row/${ticketId}/readRowActivitiesAndComments`;
 
   const params = {
     stringifiedObjectParams: JSON.stringify({
-      limit: 10,
-      offsetV2: null,
+      limit: 2,
+      offsetV2: offset,
       shouldReturnDeserializedActivityItems: true,
       shouldIncludeRowActivityOrCommentUserObjById: true,
     }),
@@ -35,10 +38,24 @@ async function fetchRevisionHistory(
       params,
     });
 
-    return res.data;
+    data.push(res.data.data);
+
+    if (res.data.data.offsetV2) {
+      await sleep(1000);
+      return fetchRevisionHistory(
+        baseId,
+        ticketId,
+        cookieHeader,
+        secretSocketId,
+        res.data.data.offsetV2,
+        data
+      );
+    }
+
+    return data;
   } catch (error) {
     console.error(
-      "[fetchRevisionHTMLWithParams] Error fetching revision data:",
+      "[fetchRevisionHTMLWithParams] Error fetching revision data:"
     );
     console.error("URL:", url);
     console.error("ticketId:", ticketId);

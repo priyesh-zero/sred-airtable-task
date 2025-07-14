@@ -20,7 +20,10 @@ export class HomeComponent {
   }
 
   triggerScraping(): void {
-    this.airtableSvc.startScraping().subscribe((response) => {
+    this.airtableSvc.performScraping().subscribe(response => {
+      if (response.status === "LOGIN_REQUIRED") {
+        
+        this.airtableSvc.startScraping().subscribe((response) => {
       if (response.status === 'MFA_REQUIRED') {
         this.openMfaDialog();
       }
@@ -28,6 +31,8 @@ export class HomeComponent {
         this.airtableSvc.performScraping().subscribe((response) => {
           console.log('-----scaper response', response)
         });
+      }
+    })
       }
     })
   }

@@ -8,6 +8,6 @@ router.post('/start-login', scraperController.startLogin);
 // Submit MFA code from frontend
 router.post('/submit-mfa', scraperController.submitMfaCode);
 
-router.get('/scrape', scraperController.scrapeHardcodedTicket);
+router.get('/scrape', scraperController.scrapeTickets);
 
 module.exports = router;
