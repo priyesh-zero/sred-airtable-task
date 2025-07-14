@@ -142,12 +142,6 @@ export function generateFlatColumnDefs(
             return `<a href="${val}" target="_blank" style="text-decoration: none; color: #1976d2;">${val}</a>`;
           }
 
-          // Date 
-          if (typeof val === 'string' && !isNaN(Date.parse(val))) {
-            // Date.parse recognised it → convert to local date string
-            return new Date(val).toLocaleDateString();
-          }
-
           // Fallback
           return val;
         }

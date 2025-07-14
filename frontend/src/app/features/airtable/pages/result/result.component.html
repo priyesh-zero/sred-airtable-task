@@ -39,7 +39,8 @@
 
   <div class="grid-container">
     <ag-grid-angular class="ag-theme-alpine grid" [theme]="'legacy'" style="width: 100%;" [rowData]="rowData"
-      [columnDefs]="columnDefs" [domLayout]="'normal'" [animateRows]="true">
+      [columnDefs]="columnDefs" [domLayout]="'normal'" [animateRows]="true" [gridOptions]="gridOptions"
+      [masterDetail]="true">
     </ag-grid-angular>
     <airtable-pagination [currentPage]="currentPage" [pageSize]="pageSize" [totalRecords]="totalRecords"
       (pageChange)="goToPage($event)">
